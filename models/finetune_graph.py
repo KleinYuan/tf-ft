@@ -15,8 +15,7 @@ class FineTuneGraph:
         self.summary_path = summary_path
 
         self.net = None
-        self.trainable_var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in self.fine_tune_layers]
-
+        self.trainable_var_list = None
         self.x = None
         self.y = None
         self.loss = None
@@ -28,14 +27,13 @@ class FineTuneGraph:
         self.graph = None
 
         self._init_graph()
-        self._init_tensorboard_monitor()
 
     def _init_graph(self):
 
         self.graph = tf.Graph()
         with self.graph.as_default():
 
-            self.x = tf.placeholder(dtype=tf.float32, shape=[self.batch_size, self.img_width, self.img_height, self.num_channels], name='placeholder_x')
+            self.x = tf.placeholder(dtype=tf.float32, shape=[None, self.img_width, self.img_height, self.num_channels], name='placeholder_x')
             self.y = tf.placeholder(dtype=tf.float32, shape=[None, self.num_classes],name='placeholder_y')
             self.keep_prob = tf.placeholder(tf.float32)
 
@@ -45,10 +43,14 @@ class FineTuneGraph:
             self.loss = tf.reduce_mean(input_tensor=tf.nn.softmax_cross_entropy_with_logits(logits=self.net, labels=self.y), name='cross_entropy')
 
             self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate, name='train/optimizer_gd')
+            self.trainable_var_list = [v for v in tf.trainable_variables() if
+                                       v.name.split('/')[0] in self.fine_tune_layers]
             gradients = tf.gradients(ys=self.loss,
                                      xs=self.trainable_var_list)
             self.grads_and_vars = list(zip(gradients, self.trainable_var_list))
             self.train_op = self.optimizer.apply_gradients(grads_and_vars=self.grads_and_vars, name='train/optimizer')
+
+            self._init_tensorboard_monitor()
 
     def _init_tensorboard_monitor(self):
 

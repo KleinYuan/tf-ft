@@ -51,8 +51,9 @@ def lr_norm(x, depth_radius, alpha, beta, bias=1.0):
                                               bias=bias)
 
 
-def conv_with_groups(x, kernel_size, depth, stride=1, input_channel=3, padding='SAME', num_groups=2):
+def conv_with_groups(x, kernel_size, depth, stride=1, padding='SAME', num_groups=2):
     assert num_groups > 1, '[Error] Num of groups is too small.'
+    input_channel = int(x.get_shape()[3])
     convolve = lambda i, k: tf.nn.conv2d(i, k,
                                          strides=[1, stride, stride, 1],
                                          padding=padding)
@@ -66,5 +67,5 @@ def conv_with_groups(x, kernel_size, depth, stride=1, input_channel=3, padding='
     weight_groups = tf.split(value=weights, num_or_size_splits=num_groups, axis=3)
     output_groups = [convolve(i, k) for i,k in zip(input_groups, weight_groups)]
     conv_layer = tf.concat(axis=3, values=output_groups)
-    conv_layer = tf.reshape(tf.nn.bias_add(conv, biases), conv_layer.get_shape().as_list())
+    conv_layer = tf.reshape(tf.nn.bias_add(conv_layer, biases), tf.shape(conv_layer))
     return conv_layer

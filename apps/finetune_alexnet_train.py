@@ -87,5 +87,5 @@ fine_tune_graph = FineTuneGraph(model=alexnet,
                                 learning_rate=LEARNING_RATE)
 alexnet_trainer = Trainer(graph_model=fine_tune_graph)
 alexnet_trainer.feed_trainer(x='', y='', data_split_ratio=DATA_SPLIT_RATIOS)
-alexnet_trainer.run_session = run_alexnet_session
+Trainer.run_session = run_alexnet_session
 alexnet_trainer.run_session()

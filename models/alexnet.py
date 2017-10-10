@@ -32,17 +32,17 @@ class AlexNet:
         with tf.variable_scope('conv1'):
             conv1 = blocks.conv(x=x, kernel_size=11, depth=96, stride=4, input_channel=3, padding='VALID')
             relu1 = blocks.relu(x=conv1)
-            pool1 = blocks.max_pool(x=relu1, kernel_size=3, stride=2, padding='VALID')
-            norm1 = blocks.lr_norm(x=pool1, depth_radius=2, alpha=2e-05, beta=0.75)
+            norm1 = blocks.lr_norm(x=relu1, depth_radius=2, alpha=2e-05, beta=0.75)
+            pool1 = blocks.max_pool(x=norm1, kernel_size=3, stride=2, padding='VALID')
 
         with tf.variable_scope('conv2'):
-            conv2 = blocks.conv_with_groups(x=norm1, kernel_size=5, depth=256, stride=1, num_groups=2)
+            conv2 = blocks.conv_with_groups(x=pool1, kernel_size=5, depth=256, stride=1, num_groups=2)
             relu2 = blocks.relu(x=conv2)
-            pool2 = blocks.max_pool(x=relu2, kernel_size=3, stride=2, padding='VALID')
-            norm2 = blocks.lr_norm(x=pool2, depth_radius=2, alpha=2e-05, beta=0.75)
+            norm2 = blocks.lr_norm(x=relu2, depth_radius=2, alpha=2e-05, beta=0.75)
+            pool2 = blocks.max_pool(x=norm2, kernel_size=3, stride=2, padding='VALID')
 
         with tf.variable_scope('conv3'):
-            conv3 = blocks.conv(x=norm2, kernel_size=3, depth=384, stride=1)
+            conv3 = blocks.conv(x=pool2, kernel_size=3, depth=384, stride=1)
             relu3 = blocks.relu(x=conv3)
 
         with tf.variable_scope('conv4'):
