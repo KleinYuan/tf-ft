@@ -51,7 +51,7 @@ def lr_norm(x, depth_radius, alpha, beta, bias=1.0):
                                               bias=bias)
 
 
-def conv_with_groups(x, kernel_size, depth, stride=1, input_channel=None, padding='SAME', num_groups=2):
+def conv_with_groups(x, kernel_size, depth, stride=1, input_channel=3, padding='SAME', num_groups=2):
     assert num_groups > 1, '[Error] Num of groups is too small.'
     convolve = lambda i, k: tf.nn.conv2d(i, k,
                                          strides=[1, stride, stride, 1],
