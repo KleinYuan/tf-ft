@@ -1,8 +1,9 @@
 import tensorflow as tf
-import numpy as np
+from services.weights_load_services import load_alexnet_pre_trained_weights
 from models.alexnet import AlexNet
 from models.finetune_graph import FineTuneGraph
 from nolearn.lasagne import BatchIterator
+from models.train import Trainer
 
 BVLC_ALEXNET_FP = 'data/bvlc_alexnet.npy'
 SUMMARY_PATH = 'data/alexnet_train'
@@ -20,80 +21,71 @@ NUM_EPOCHS = 1000
 KEEP_PROB = 0.5
 
 VALIDATE_STEP = 300
+TEST_STEP = 400
+DATA_SPLIT_RATIOS = [0.7, 0.2, 0.1]
 
 
-def load_pre_trained_weights(weight_path, skip_layers, session):
-    weights_dict = np.load(weight_path, encoding='bytes').item()
-    # Loop over all layer names stored in the weights dict
-    for op_name in weights_dict:
-        # Check if the layer is one of the layers that should be reinitialized
-        if op_name not in skip_layers:
+def run_alexnet_session(self):
 
-            with tf.variable_scope(op_name, reuse=True):
-
-                # Loop over list of weights/biases and assign them to their corresponding tf variable
-                for data in weights_dict[op_name]:
-                    # Biases
-                    if len(data.shape) == 1:
-
-                        var = tf.get_variable('biases', trainable=False)
-                        session.run(var.assign(data))
-                    # Weights
-                    else:
-                        var = tf.get_variable('weights', trainable=False)
-                        session.run(var.assign(data))
-
-# TODO: a trainer model should be added
-
-def train(x_train, y_train):
-
-    alexnet = AlexNet(num_classes=NUM_CLASSES)
-    fine_tune_graph = FineTuneGraph(model=alexnet,
-                                    fine_tune_layers=FINE_TUNE_LAYERS,
-                                    num_classes=NUM_CLASSES,
-                                    summary_path=SUMMARY_PATH,
-                                    batch_size=BATCH_SIZE,
-                                    img_height=IMG_HEIGHT,
-                                    img_width=IMG_WIDTH,
-                                    num_channels=NUM_CHANNELS,
-                                    learning_rate=LEARNING_RATE)
-
-    graph = fine_tune_graph.get_graph()
-    x_placeholder, y_placeholder, keep_prob_placeholder = fine_tune_graph.get_placeholders()
-    writer = fine_tune_graph.get_writer()
-    summary = fine_tune_graph.get_summary()
-    ops = fine_tune_graph.get_ops()
-
-    with tf.Session(graph=graph) as sess:
+    with tf.Session(graph=self.graph) as sess:
 
         sess.run(tf.global_variables_initializer())
         saver = tf.train.Saver()
-        writer.add_graph(sess.graph)
-        load_pre_trained_weights(weight_path=BVLC_ALEXNET_FP,
-                                 skip_layers=FINE_TUNE_LAYERS,
-                                 session=sess)
+        self.writer.add_graph(sess.graph)
+        load_alexnet_pre_trained_weights(weight_path=BVLC_ALEXNET_FP,
+                                         skip_layers=FINE_TUNE_LAYERS,
+                                         session=sess)
         batch_iterator = BatchIterator(batch_size=BATCH_SIZE, shuffle=True)
 
         for epoch in range(NUM_EPOCHS):
 
             step = 1
 
-            for x_train_batch, y_train_batch in batch_iterator(x_train, y_train):
-                sess.run(ops, feed_dict={
-                    x_placeholder: x_train_batch,
-                    y_placeholder: y_train_batch,
-                    keep_prob_placeholder: KEEP_PROB
+            for x_train_batch, y_train_batch in batch_iterator(self.x_train, self.y_train):
+                sess.run(self.ops, feed_dict={
+                    self.x_placeholder: x_train_batch,
+                    self.y_placeholder: y_train_batch,
+                    self.keep_prob_placeholder: KEEP_PROB
                 })
 
                 if step % VALIDATE_STEP == 0:
-                    current_summary = sess.run(summary, feed_dict={
-                        x_placeholder: x_train_batch,
-                        y_placeholder: y_train_batch,
-                        keep_prob_placeholder: 1.
+                    current_summary, train_loss = sess.run([self.summary, self.loss], feed_dict={
+                        self.x_placeholder: x_train_batch,
+                        self.y_placeholder: y_train_batch,
+                        self.keep_prob_placeholder: 1.
                     })
-                    writer.add_summary(current_summary, epoch * BATCH_SIZE + step)
+                    val_loss = sess.run(self.loss, feed_dict={
+                        self.x_placeholder: self.x_val,
+                        self.y_placeholder: self.y_val,
+                        self.keep_prob_placeholder: 1.
+                    })
+
+                    print '[EPOCH -- %s] Train loss: %s\nVal loss: %s' % (epoch, train_loss, val_loss)
+                    self.writer.add_summary(current_summary, epoch * BATCH_SIZE + step)
                     save_path = saver.save(sess, MODEL_NAME + '_%s' % epoch)
                     print 'Taking snapshot at [Epoch = %s] [Step = %s] [Path = %s]' % (epoch, step, save_path)
+
+                if step % TEST_STEP == 0:
+                    test_loss = sess.run(self.loss, feed_dict={
+                        self.x_placeholder: self.x_test,
+                        self.y_placeholder: self.y_test,
+                        self.keep_prob_placeholder: 1.
+                    })
+                    print '[EPOCH -- %s] Test loss: %s' % (epoch, test_loss)
             step += 1
 
-                # TODO: validation to be added
+
+alexnet = AlexNet(num_classes=NUM_CLASSES)
+fine_tune_graph = FineTuneGraph(model=alexnet,
+                                fine_tune_layers=FINE_TUNE_LAYERS,
+                                num_classes=NUM_CLASSES,
+                                summary_path=SUMMARY_PATH,
+                                batch_size=BATCH_SIZE,
+                                img_height=IMG_HEIGHT,
+                                img_width=IMG_WIDTH,
+                                num_channels=NUM_CHANNELS,
+                                learning_rate=LEARNING_RATE)
+alexnet_trainer = Trainer(graph_model=fine_tune_graph)
+alexnet_trainer.feed_trainer(x='', y='', data_split_ratio=DATA_SPLIT_RATIOS)
+alexnet_trainer.run_session = run_alexnet_session
+alexnet_trainer.run_session()

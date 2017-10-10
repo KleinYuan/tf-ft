@@ -76,3 +76,6 @@ class FineTuneGraph:
 
     def get_ops(self):
         return self.train_op
+
+    def get_loss(self):
+        return self.loss
