@@ -15,7 +15,7 @@ class FineTuneGraph:
         self.summary_path = summary_path
 
         self.net = None
-        self.trainable_var_list = None
+        self.var_list = None
         self.x = None
         self.y = None
         self.loss = None
@@ -26,6 +26,7 @@ class FineTuneGraph:
         self.summary = None
         self.writer = None
         self.graph = None
+        self.gradients = None
 
         self._init_graph()
 
@@ -39,36 +40,33 @@ class FineTuneGraph:
             self.keep_prob = tf.placeholder(tf.float32)
             self.model.init_networks(x=self.x, keep_prob=self.keep_prob)
             self.net = self.model.net
-            self.trainable_var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in self.fine_tune_layers]
+            self.var_list = [v for v in tf.trainable_variables() if v.name.split('/')[0] in self.fine_tune_layers]
 
             with tf.name_scope("cross_ent"):
-                self.loss = tf.reduce_mean(input_tensor=tf.nn.softmax_cross_entropy_with_logits(logits=self.net, labels=self.y))
+                self.loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.net, labels=self.y))
 
             with tf.name_scope("train"):
-                gradients = tf.gradients(ys=self.loss,
-                                         xs=self.trainable_var_list)
-                self.grads_and_vars = list(zip(gradients, self.trainable_var_list))
+                self.gradients = tf.gradients(self.loss, self.var_list)
+                self.grads_and_vars = list(zip(self.gradients, self.var_list))
                 self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate)
                 self.train_op = self.optimizer.apply_gradients(grads_and_vars=self.grads_and_vars)
+
+            for gradient, var in self.grads_and_vars:
+                tf.summary.histogram(var.name + '/gradient', gradient)
+
+            for var in self.var_list:
+                tf.summary.histogram(var.name, var)
+
+            tf.summary.scalar('cross_entropy', self.loss)
 
             with tf.name_scope("accuracy"):
                 correct_pred = tf.equal(tf.argmax(self.net, 1), tf.argmax(self.y, 1))
                 self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
-            self._init_tensorboard_monitor()
+            tf.summary.scalar('accuracy', self.accuracy)
 
-    def _init_tensorboard_monitor(self):
-
-        for gradient, var in self.grads_and_vars:
-            tf.summary.histogram(var.name + '/gradient', gradient)
-
-        for var in self.trainable_var_list:
-            tf.summary.histogram(var.name, var)
-
-        tf.summary.scalar('accuracy', self.accuracy)
-        tf.summary.scalar('cross_entropy', self.loss)
-        self.summary = tf.summary.merge_all()
-        self.writer = tf.summary.FileWriter(logdir=self.summary_path)
+            self.summary = tf.summary.merge_all()
+            self.writer = tf.summary.FileWriter(logdir=self.summary_path)
 
     def get_writer(self):
         return self.writer

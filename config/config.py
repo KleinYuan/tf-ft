@@ -14,8 +14,8 @@ alexnet = {
         'learning_rate': 0.0001,
         'num_epochs': 1000,
         'keep_prob': 0.5,
-        'validation_period': 30,
-        'test_period': 400,
+        'validation_period': 1,
+        'test_period': 50,
         'data_split_ratios': [0.7, 0.2, 0.1]
     }
 }
