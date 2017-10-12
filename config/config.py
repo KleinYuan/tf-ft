@@ -1,9 +1,9 @@
 alexnet = {
     'pre_trained_weights_fp': 'data/bvlc_alexnet.npy',
-    'tensorboard_dir': 'data/alexnet_finetune',
+    'tensorboard_dir': 'data/alexnet_finetune/train',
     'num_classes': 1,
-    'fine_tune_layers': ['fc6', 'fc7', 'fc8'],
-    'model_name': 'alexnet_finetune',
+    'fine_tune_layers': ['fc8', 'fc7', 'fc6'],
+    'model_save_path': 'data/alexnet_finetune/save/alexnet_finetune',
     'img_csv_col_name': 'img',
     'csv_fp': 'data/alexnet_finetune/train.csv',
     'hyperparams': {
@@ -18,5 +18,4 @@ alexnet = {
         'test_period': 400,
         'data_split_ratios': [0.7, 0.2, 0.1]
     }
-
 }

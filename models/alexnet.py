@@ -31,14 +31,14 @@ class AlexNet:
     def init_networks(self, x, keep_prob):
 
         conv1 = blocks.conv(x=x, kernel_size=11, depth=96, stride=4, input_channel=3, padding='VALID', name='conv1')
-        pool1 = blocks.max_pool(x=conv1, kernel_size=3, stride=2, padding='VALID', name='pool1')
-        norm1 = blocks.lr_norm(x=pool1, depth_radius=2, alpha=2e-05, beta=0.75, name='norm1')
+        norm1 = blocks.lr_norm(x=conv1, depth_radius=2, alpha=2e-05, beta=0.75, name='norm1')
+        pool1 = blocks.max_pool(x=norm1, kernel_size=3, stride=2, padding='VALID', name='pool1')
 
-        conv2 = blocks.conv_with_groups(x=norm1, kernel_size=5, depth=256, stride=1, num_groups=2, name='conv2')
-        pool2 = blocks.max_pool(x=conv2, kernel_size=3, stride=2, padding='VALID', name='pool2')
-        norm2 = blocks.lr_norm(x=pool2, depth_radius=2, alpha=2e-05, beta=0.75, name='norm2')
+        conv2 = blocks.conv_with_groups(x=pool1, kernel_size=5, depth=256, stride=1, num_groups=2, name='conv2')
+        norm2 = blocks.lr_norm(x=conv2, depth_radius=2, alpha=2e-05, beta=0.75, name='norm2')
+        pool2 = blocks.max_pool(x=norm2, kernel_size=3, stride=2, padding='VALID', name='pool2')
 
-        conv3 = blocks.conv(x=norm2, kernel_size=3, depth=384, stride=1, name='conv3')
+        conv3 = blocks.conv(x=pool2, kernel_size=3, depth=384, stride=1, name='conv3')
         conv4 = blocks.conv_with_groups(x=conv3, kernel_size=3, depth=384, stride=1, num_groups=2, name='conv4')
 
         conv5 = blocks.conv_with_groups(x=conv4, kernel_size=3, depth=256, stride=1, num_groups=2, name='conv5')

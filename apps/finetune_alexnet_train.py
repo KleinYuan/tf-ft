@@ -50,7 +50,7 @@ class GenericDataSets(DataSets):
 
             y_data = df[df.columns[1:alexnet_config['num_classes'] + 1]].values
             y_data = y_data.astype(np.float32)
-            y_data = self._normalize_data(y_data, norm_factor=50)
+            #y_data = self._normalize_data(y_data, norm_factor=50)
             x_data, y_data = shuffle(x_data, y_data, random_state=42)
         else:
             y_data = None
@@ -102,7 +102,7 @@ def run_alexnet_session(self):
 
                 print '[EPOCH -- %s] Train loss: %s\nVal loss: %s' % (epoch, train_loss, val_loss)
                 self.writer.add_summary(current_summary, epoch * alexnet_config['hyperparams']['batch_size'] + step)
-                save_path = saver.save(sess, alexnet_config['model_name'] + '_%s' % epoch)
+                save_path = saver.save(sess, alexnet_config['model_save_path'] + '_%s' % epoch)
                 print 'Taking snapshot at [Epoch = %s] [Step = %s] [Path = %s]' % (epoch, step, save_path)
 
             if step % alexnet_config['hyperparams']['test_period'] == 0:
