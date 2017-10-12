@@ -16,7 +16,10 @@ from config.config import alexnet as alexnet_config
 class GenericDataSets(DataSets):
     @staticmethod
     def _img_pre_process(img):
-        new_img = cv2.resize(img, (alexnet_config['hyperparams']['img_width'], alexnet_config['hyperparams']['img_height']), interpolation=cv2.INTER_CUBIC)
+        new_img = cv2.resize(img,
+                             (alexnet_config['hyperparams']['img_width'],
+                              alexnet_config['hyperparams']['img_height']),
+                             interpolation=cv2.INTER_CUBIC)
         new_img = cv2.normalize(new_img, new_img, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
         return new_img
 
