@@ -66,7 +66,7 @@ class AlexTrainer(Trainer):
     def run_session(self):
 
         with tf.Session(graph=self.graph) as self.session:
-
+            print 'Everything in graph: ', self.graph
             self.session.run(tf.global_variables_initializer())
             saver = tf.train.Saver()
             load_alexnet_pre_trained_weights(weight_path=alexnet_config['pre_trained_weights_fp'],
@@ -77,7 +77,6 @@ class AlexTrainer(Trainer):
             current_x_train_batch = None
             current_y_train_batch = None
             step = 1
-
             for epoch in range(alexnet_config['hyperparams']['num_epochs']):
                 print '[EPOCH -- %s/%s] In Progress ...' % (epoch, alexnet_config['hyperparams']['num_epochs'])
                 for x_train_batch, y_train_batch in batch_iterator(self.x_train, self.y_train):
