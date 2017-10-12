@@ -19,6 +19,7 @@ class FineTuneGraph:
         self.x = None
         self.y = None
         self.loss = None
+        self.accuracy = None
         self.optimizer = None
         self.train_op = None
         self.grads_and_vars = None
@@ -41,7 +42,8 @@ class FineTuneGraph:
             self.net = self.model.net
 
             self.loss = tf.reduce_mean(input_tensor=tf.nn.softmax_cross_entropy_with_logits(logits=self.net, labels=self.y), name='cross_entropy')
-
+            correct_pred = tf.equal(tf.argmax(self.net, 1), tf.argmax(self.y, 1))
+            self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
             self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate, name='train/optimizer_gd')
             self.trainable_var_list = [v for v in tf.trainable_variables() if
                                        v.name.split('/')[0] in self.fine_tune_layers]
@@ -60,6 +62,7 @@ class FineTuneGraph:
         for var in self.trainable_var_list:
             tf.summary.histogram(var.name, var)
 
+        tf.summary.scalar('accuracy', self.accuracy)
         tf.summary.scalar('cross_entropy', self.loss)
         self.summary = tf.summary.merge_all()
         self.writer = tf.summary.FileWriter(logdir=self.summary_path)
