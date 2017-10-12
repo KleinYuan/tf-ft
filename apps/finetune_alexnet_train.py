@@ -77,7 +77,7 @@ def run_alexnet_session(self):
         step = 1
 
         for epoch in range(alexnet_config['hyperparams']['num_epochs']):
-
+            print '[EPOCH -- %s/%s] In Progress ...' % (epoch, alexnet_config['hyperparams']['num_epochs'])
             for x_train_batch, y_train_batch in batch_iterator(self.x_train, self.y_train):
                 sess.run(self.ops, feed_dict={
                     self.x_placeholder: x_train_batch,
