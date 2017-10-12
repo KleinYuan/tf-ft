@@ -30,9 +30,9 @@ def fc(x, name, output_size, relu=True):
         weights = tf.get_variable(name='weights', shape=[input_size, output_size], trainable=True)
         biases = tf.get_variable(name='biases', shape=[output_size], trainable=True)
         fc_layer = tf.nn.xw_plus_b(x, weights, biases, name=scope.name)
-        if relu:
-            fc_layer = tf.nn.relu(fc_layer)
-        return fc_layer
+    if relu:
+        fc_layer = tf.nn.relu(fc_layer)
+    return fc_layer
 
 
 def dropout(x, keep_prob):
