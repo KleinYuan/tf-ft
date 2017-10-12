@@ -35,7 +35,7 @@ class FineTuneGraph:
         with self.graph.as_default():
 
             self.x = tf.placeholder(dtype=tf.float32, shape=[None, self.img_width, self.img_height, self.num_channels], name='placeholder_x')
-            self.y = tf.placeholder(dtype=tf.float32, shape=[None, self.num_classes],name='placeholder_y')
+            self.y = tf.placeholder(dtype=tf.float32, shape=[None, self.num_classes], name='placeholder_y')
             self.keep_prob = tf.placeholder(tf.float32)
 
             self.model.init_networks(x=self.x, keep_prob=self.keep_prob)

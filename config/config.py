@@ -1,7 +1,7 @@
 alexnet = {
     'pre_trained_weights_fp': 'data/bvlc_alexnet.npy',
-    'tensorboard_dir': 'data/alexnet_train',
-    'num_classes': 2,
+    'tensorboard_dir': 'data/alexnet_finetune',
+    'num_classes': 1,
     'fine_tune_layers': ['fc6', 'fc7', 'fc8'],
     'model_name': 'alexnet_finetune',
     'img_csv_col_name': 'img',
