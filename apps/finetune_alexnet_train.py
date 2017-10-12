@@ -61,57 +61,59 @@ class GenericDataSets(DataSets):
         self.y_data = y_data
 
 
-def run_alexnet_session(self):
+class AlexTrainer(Trainer):
 
-    with tf.Session(graph=self.graph) as sess:
+    def run_session(self):
 
-        sess.run(tf.global_variables_initializer())
-        saver = tf.train.Saver()
-        self.writer.add_graph(sess.graph)
-        load_alexnet_pre_trained_weights(weight_path=alexnet_config['pre_trained_weights_fp'],
-                                         skip_layers=alexnet_config['fine_tune_layers'],
-                                         session=sess)
-        batch_iterator = BatchIterator(batch_size=alexnet_config['hyperparams']['batch_size'], shuffle=True)
-        current_x_train_batch = None
-        current_y_train_batch = None
-        step = 1
+        with tf.Session(graph=self.graph) as self.session:
 
-        for epoch in range(alexnet_config['hyperparams']['num_epochs']):
-            print '[EPOCH -- %s/%s] In Progress ...' % (epoch, alexnet_config['hyperparams']['num_epochs'])
-            for x_train_batch, y_train_batch in batch_iterator(self.x_train, self.y_train):
-                sess.run(self.ops, feed_dict={
-                    self.x_placeholder: x_train_batch,
-                    self.y_placeholder: y_train_batch,
-                    self.keep_prob_placeholder: alexnet_config['hyperparams']['keep_prob']
-                })
-                current_x_train_batch = x_train_batch
-                current_y_train_batch = y_train_batch
-                step += 1
+            self.session.run(tf.global_variables_initializer())
+            saver = tf.train.Saver()
+            load_alexnet_pre_trained_weights(weight_path=alexnet_config['pre_trained_weights_fp'],
+                                             skip_layers=alexnet_config['fine_tune_layers'],
+                                             session=self.session)
+            self.writer.add_graph(self.session.graph)
+            batch_iterator = BatchIterator(batch_size=alexnet_config['hyperparams']['batch_size'], shuffle=True)
+            current_x_train_batch = None
+            current_y_train_batch = None
+            step = 1
 
-            if step % alexnet_config['hyperparams']['validation_period'] == 0:
-                current_summary, train_loss = sess.run([self.summary, self.loss], feed_dict={
-                    self.x_placeholder: current_x_train_batch,
-                    self.y_placeholder: current_y_train_batch,
-                    self.keep_prob_placeholder: 1.
-                })
-                val_loss = sess.run(self.loss, feed_dict={
-                    self.x_placeholder: self.x_val,
-                    self.y_placeholder: self.y_val,
-                    self.keep_prob_placeholder: 1.
-                })
+            for epoch in range(alexnet_config['hyperparams']['num_epochs']):
+                print '[EPOCH -- %s/%s] In Progress ...' % (epoch, alexnet_config['hyperparams']['num_epochs'])
+                for x_train_batch, y_train_batch in batch_iterator(self.x_train, self.y_train):
+                    self.session.run(self.ops, feed_dict={
+                        self.x_placeholder: x_train_batch,
+                        self.y_placeholder: y_train_batch,
+                        self.keep_prob_placeholder: alexnet_config['hyperparams']['keep_prob']
+                    })
+                    current_x_train_batch = x_train_batch
+                    current_y_train_batch = y_train_batch
+                    step += 1
 
-                print '[EPOCH -- %s] Train loss: %s\nVal loss: %s' % (epoch, train_loss, val_loss)
-                self.writer.add_summary(current_summary, epoch * alexnet_config['hyperparams']['batch_size'] + step)
-                save_path = saver.save(sess, alexnet_config['model_save_path'] + '_%s' % epoch)
-                print 'Taking snapshot at [Epoch = %s] [Step = %s] [Path = %s]' % (epoch, step, save_path)
+                if step % alexnet_config['hyperparams']['validation_period'] == 0:
+                    current_summary, train_loss = self.session.run([self.summary, self.loss], feed_dict={
+                        self.x_placeholder: current_x_train_batch,
+                        self.y_placeholder: current_y_train_batch,
+                        self.keep_prob_placeholder: 1.
+                    })
+                    val_loss = self.session.run(self.loss, feed_dict={
+                        self.x_placeholder: self.x_val,
+                        self.y_placeholder: self.y_val,
+                        self.keep_prob_placeholder: 1.
+                    })
 
-            if step % alexnet_config['hyperparams']['test_period'] == 0:
-                test_loss = sess.run(self.loss, feed_dict={
-                    self.x_placeholder: self.x_test,
-                    self.y_placeholder: self.y_test,
-                    self.keep_prob_placeholder: 1.
-                })
-                print '[EPOCH -- %s] Test loss: %s' % (epoch, test_loss)
+                    print '[EPOCH -- %s] Train loss: %s\nVal loss: %s' % (epoch, train_loss, val_loss)
+                    self.writer.add_summary(current_summary, epoch * alexnet_config['hyperparams']['batch_size'] + step)
+                    save_path = saver.save(self.session, alexnet_config['model_save_path'] + '_%s' % epoch)
+                    print 'Taking snapshot at [Epoch = %s] [Step = %s] [Path = %s]' % (epoch, step, save_path)
+
+                if step % alexnet_config['hyperparams']['test_period'] == 0:
+                    test_loss = self.session.run(self.loss, feed_dict={
+                        self.x_placeholder: self.x_test,
+                        self.y_placeholder: self.y_test,
+                        self.keep_prob_placeholder: 1.
+                    })
+                    print '[EPOCH -- %s] Test loss: %s' % (epoch, test_loss)
 
 data_sets = GenericDataSets()
 data_sets.load(mode='train', fn=alexnet_config['csv_fp'])
@@ -125,7 +127,7 @@ fine_tune_graph = FineTuneGraph(model=alexnet,
                                 img_width=alexnet_config['hyperparams']['img_width'],
                                 num_channels=alexnet_config['hyperparams']['num_channels'],
                                 learning_rate=alexnet_config['hyperparams']['learning_rate'])
-alexnet_trainer = Trainer(graph_model=fine_tune_graph)
+
+alexnet_trainer = AlexTrainer(graph_model=fine_tune_graph)
 alexnet_trainer.feed_trainer(x=data_sets.x_data, y=data_sets.y_data, data_split_ratio=alexnet_config['hyperparams']['data_split_ratios'])
-Trainer.run_session = run_alexnet_session
 alexnet_trainer.run_session()
