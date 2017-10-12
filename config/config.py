@@ -5,7 +5,7 @@ alexnet = {
     'fine_tune_layers': ['fc6', 'fc7', 'fc8'],
     'model_name': 'alexnet_finetune',
     'img_csv_col_name': 'img',
-    'csv_fp': 'alexnet_finetune/train.csv',
+    'csv_fp': 'data/alexnet_finetune/train.csv',
     'hyperparams': {
         'batch_size': 128,
         'img_height': 227,
