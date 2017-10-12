@@ -4,10 +4,11 @@ import tensorflow as tf
 # We usually use the same kernel_height and kernel_width.
 # Therefore, if you wanna use a more customized kernel shape, you may wanna create a new function.
 def conv(x, kernel_size, depth, name, stride=1, input_channel=None, padding='SAME'):
-    with tf.variable_scope(name) as scope:
-        if input_channel is None:
-            input_channel = int(x.get_shape()[3])
 
+    if input_channel is None:
+        input_channel = int(x.get_shape()[3])
+
+    with tf.variable_scope(name) as scope:
         weights = tf.get_variable(name='weights',
                                   shape=[kernel_size, kernel_size, input_channel, depth]
                                   )
@@ -18,9 +19,9 @@ def conv(x, kernel_size, depth, name, stride=1, input_channel=None, padding='SAM
                                   filter=weights,
                                   strides=[1, stride, stride, 1],
                                   padding=padding)
-        conv_layer = tf.reshape(tf.nn.bias_add(conv_layer, biases), tf.shape(conv_layer))
-        relu = tf.nn.relu(conv_layer, name=scope.name)
-        return relu
+    conv_layer = tf.reshape(tf.nn.bias_add(conv_layer, biases), tf.shape(conv_layer))
+    relu = tf.nn.relu(conv_layer, name=scope.name)
+    return relu
 
 
 def fc(x, name, output_size, relu=True):
@@ -57,11 +58,12 @@ def lr_norm(x, depth_radius, alpha, beta, name, bias=1.0):
 
 def conv_with_groups(x, kernel_size, depth, name, stride=1, padding='SAME', num_groups=2):
     assert num_groups > 1, '[Error] Num of groups is too small.'
+    input_channel = int(x.get_shape()[3])
+    convolve = lambda i, k: tf.nn.conv2d(i, k,
+                                         strides=[1, stride, stride, 1],
+                                         padding=padding)
     with tf.variable_scope(name) as scope:
-        input_channel = int(x.get_shape()[3])
-        convolve = lambda i, k: tf.nn.conv2d(i, k,
-                                             strides=[1, stride, stride, 1],
-                                             padding=padding)
+
         input_groups = tf.split(value=x, num_or_size_splits=num_groups, axis=3)
         weights = tf.get_variable(name='weights',
                                   shape=[kernel_size, kernel_size, input_channel/num_groups, depth]
@@ -72,6 +74,6 @@ def conv_with_groups(x, kernel_size, depth, name, stride=1, padding='SAME', num_
         weight_groups = tf.split(value=weights, num_or_size_splits=num_groups, axis=3)
         output_groups = [convolve(i, k) for i,k in zip(input_groups, weight_groups)]
         conv_layer = tf.concat(axis=3, values=output_groups)
-        bias = tf.reshape(tf.nn.bias_add(conv_layer, biases), tf.shape(conv_layer))
-        relu = tf.nn.relu(bias, name=scope.name)
-        return relu
+    bias = tf.reshape(tf.nn.bias_add(conv_layer, biases), tf.shape(conv_layer))
+    relu = tf.nn.relu(bias, name=scope.name)
+    return relu
