@@ -27,7 +27,7 @@ class Trainer:
 
     def feed_trainer(self, x, y, data_split_ratio):
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(x, y, test_size=(data_split_ratio[1] + data_split_ratio[2]))
-        self.x_test, self.x_val, self.y_test, self.y_val = train_test_split(self.x_test, self.y_test, test_size=(data_split_ratio[2] / data_split_ratio[1]))
+        self.x_test, self.x_val, self.y_test, self.y_val = train_test_split(self.x_test, self.y_test, test_size=(data_split_ratio[2] / (data_split_ratio[1] + data_split_ratio[2])))
 
         self.graph = self.graph_model.get_graph()
         self.x_placeholder, self.y_placeholder, self.keep_prob_placeholder = self.graph_model.get_placeholders()
