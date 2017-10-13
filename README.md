@@ -8,7 +8,7 @@ pre-trained/existing models, such as AlexNet, VGG-16, ... (More CNN based).
 
 Step1. Put your datasets somewhere and train.csv under `/data/alexnet_finetune`
 
-Step2. train.csv should be the format with first column to be the locations of images
+Step2. train.csv should be the format with first column to be the locations of images (I put an example in the folder)
 
 Step3. Run:
 

@@ -50,7 +50,6 @@ class GenericDataSets(DataSets):
 
             y_data = df[df.columns[1:alexnet_config['num_classes'] + 1]].values
             y_data = y_data.astype(np.float32)
-            #y_data = self._normalize_data(y_data, norm_factor=50)
             x_data, y_data = shuffle(x_data, y_data, random_state=42)
         else:
             y_data = None
