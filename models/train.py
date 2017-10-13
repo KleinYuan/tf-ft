@@ -1,3 +1,4 @@
+import tensorflow as tf
 from sklearn.cross_validation import train_test_split
 
 
@@ -24,6 +25,14 @@ class Trainer:
         self.loss = None
 
         self.session = None
+        self.checkpoint = None
+
+    def _check_point_exists(self, check_point_dir):
+        self.checkpoint = tf.train.get_checkpoint_state(check_point_dir)
+        if self.checkpoint is None:
+            return False
+        else:
+            return True
 
     def feed_trainer(self, x, y, data_split_ratio):
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(x, y, test_size=(data_split_ratio[1] + data_split_ratio[2]))

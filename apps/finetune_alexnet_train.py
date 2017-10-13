@@ -68,6 +68,15 @@ class AlexTrainer(Trainer):
             print 'Everything in graph: ', self.graph
             self.session.run(tf.global_variables_initializer())
             saver = tf.train.Saver()
+
+            if self._check_point_exists(alexnet_config['model_save_dir']):
+                input_checkpoint = self.checkpoint.model_checkpoint_path
+                print 'Found Existing checkpoint: %s' % input_checkpoint
+                saver.restore(self.session, input_checkpoint)
+                alexnet_config['model_save_path'] += '_restored_'
+            else:
+                print 'No Existing checkpoint found!'
+
             load_alexnet_pre_trained_weights(weight_path=alexnet_config['pre_trained_weights_fp'],
                                              skip_layers=alexnet_config['fine_tune_layers'],
                                              session=self.session)

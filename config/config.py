@@ -4,6 +4,7 @@ alexnet = {
     'num_classes': 1,
     'fine_tune_layers': ['fc8', 'fc7', 'fc6'],
     'model_save_path': 'data/alexnet_finetune/save/alexnet_finetune',
+    'model_save_dir': 'data/alexnet_finetune/save',
     'img_csv_col_name': 'img',
     'csv_fp': 'data/alexnet_finetune/train.csv',
     'hyperparams': {
