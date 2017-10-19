@@ -10,6 +10,7 @@ from models.alexnet import AlexNet
 from models.finetune_graph import FineTuneGraph
 from models.train import Trainer
 from models.data import DataSets
+from models.augmentation import Augmentation
 from config.config import alexnet as alexnet_config
 
 
@@ -60,9 +61,18 @@ class GenericDataSets(DataSets):
         self.y_data = y_data
 
 
+class AlexAugmentator(Augmentation):
+
+    @staticmethod
+    def _augment_data(x):
+        # TODO: You need to add your own customized data augmentation logics here
+        return x
+
+
 class AlexTrainer(Trainer):
 
     def run_session(self):
+        data_augmentator = AlexAugmentator()
 
         with tf.Session(graph=self.graph) as self.session:
             print 'Everything in graph: ', self.graph
@@ -84,10 +94,16 @@ class AlexTrainer(Trainer):
             batch_iterator = BatchIterator(batch_size=alexnet_config['hyperparams']['batch_size'], shuffle=True)
             current_x_train_batch = None
             current_y_train_batch = None
+            
             step = 1
             for epoch in range(alexnet_config['hyperparams']['num_epochs']):
                 print '[EPOCH -- %s/%s] In Progress ...' % (epoch, alexnet_config['hyperparams']['num_epochs'])
                 for x_train_batch, y_train_batch in batch_iterator(self.x_train, self.y_train):
+                    # Data Augmentation
+                    data_augmentator.load_data(x_train_batch)
+                    data_augmentator.augment_data()
+                    x_train_batch = data_augmentator.get_augmented_data()
+
                     self.session.run(self.ops, feed_dict={
                         self.x_placeholder: x_train_batch,
                         self.y_placeholder: y_train_batch,
